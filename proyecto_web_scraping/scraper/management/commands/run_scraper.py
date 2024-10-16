@@ -211,7 +211,7 @@ class HtmlScanner:
                 url = link_tag['href'] if link_tag and 'href' in link_tag.attrs else None  # Deja en blanco si no hay URL
                 print(name + ' for ' + price + ' at ' + location + '. See more in: ' + url)
 
-                # self.save_industrial_space_register(sName=name, sLocation=location, sPrice=price, sUrl=url)
+                self.save_industrial_space_register(sName=name, sLocation=location, sPrice=price, sUrl=url)
 
         else:
             print('Sin elementos')
@@ -242,36 +242,79 @@ class HtmlScanner:
         except Exception as e:  # Captura cualquier otro tipo de excepción
             print(f"Ocurrió un error inesperado: {e}")
 
+
 class Command(BaseCommand):
     help = 'Run the web scraper'
 
     def handle(self, *args, **kwargs):
-        # Objeto scrapper, como argumentos las paths de los ejecutables
-        sc = RealStateScraper(
-            "/usr/local/bin/chromedriver-linux64/chromedriver", "/usr/local/bin/chrome-headless-shell-linux64/chrome-headless-shell"
+        # Configuración del scraper
+        scraper = self.initialize_scraper()
+        
+        if self.run_scraper(scraper):
+            print('Scraping completado exitosamente.')
+        else:
+            print('Ocurrió un error durante el scraping.')
+
+        scraper.close_driver()
+
+    def initialize_scraper(self) -> RealStateScraper:
+        """
+        Inicializa el scraper con las configuraciones necesarias.
+
+        Returns:
+            RealStateScraper: Instancia del scraper configurado.
+        """
+        scraper = RealStateScraper(
+            "/usr/local/bin/chromedriver-linux64/chromedriver", 
+            "/usr/local/bin/chrome-headless-shell-linux64/chrome-headless-shell"
         )
         
-        sc.add_options(
-            "--headless", # Sin gui
-            "--no-sandbox", # Necesario en algunos entornos
-            # Cambiamos el user-agent si no nos bloquea la conexión
+        scraper.add_options(
+            "--headless",  # Sin GUI
+            "--no-sandbox",  # Necesario en algunos entornos
             "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36"
         )
         
-        sc.open_driver()
-        if sc.get_page("https://www.cbcworldwide.com/search/lease?product_types[]=industrial&country=United+States&market=lease"):
-            cards=sc.get_cards("div.sc-wrap.cbc1.pc-onmarket")
-            if cards is None:
-                print('Error al cambiar de páginas')
-            else:
-                sc.write_file(cards, "cards.html")
-                hs = HtmlScanner("cards.html")
-                if hs.get_attributes():
-                    print('Datos guardados con éxito')
-                else:
-                    print('Error al guardar')
-                
-        else:
+        scraper.open_driver()
+        return scraper
+
+    def run_scraper(self, scraper: RealStateScraper) -> bool:
+        """
+        Ejecuta el scraping en la página especificada.
+
+        Args:
+            scraper (RealStateScraper): Instancia del scraper a usar.
+
+        Returns:
+            bool: True si el scraping fue exitoso, False en caso contrario.
+        """
+        url = "https://www.cbcworldwide.com/search/lease?product_types[]=industrial&country=United+States&market=lease"
+        if not scraper.get_page(url):
             print("No se pudo acceder a la página")
+            return False
+
+        cards = scraper.get_cards("div.sc-wrap.cbc1.pc-onmarket")
+        if cards is None:
+            print('Error al cambiar de páginas')
+            return False
+
+        scraper.write_file(cards, "cards.html")
+        return self.process_saved_file("cards.html")
+
+    def process_saved_file(self, file_name: str) -> bool:
+        """
+        Procesa el archivo HTML guardado y verifica si los datos fueron extraídos correctamente.
+
+        Args:
+            file_name (str): El nombre del archivo HTML a procesar.
+
+        Returns:
+            bool: True si los datos fueron guardados exitosamente, False en caso contrario.
+        """
+        hs = HtmlScanner(file_name)
+        if hs.get_attributes():
+            print('Datos guardados con éxito')
+            return True
         
-        sc.close_driver()
+        print('Error al guardar')
+        return False
