@@ -1,0 +1,5 @@
+selenium
+beautifulsoup4
+django
+psycopg2-binary  # para conectar Django con PostgreSQL más adelante
+request

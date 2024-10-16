@@ -1,0 +1,32 @@
+version: '3.8' 
+
+services:
+  scraper:
+    build: .
+    volumes:
+      - ./proyecto_web_scraping:/proyecto_web_scraping  # Monta el código del proyecto en el contenedor
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}  # Conexión a la base de datos desde el archivo .env
+    networks:
+      - scraping-network
+    depends_on:
+      - db  # El scraper depende de que la base de datos esté levantada python scraper/scraper.py
+    command: >
+      sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py run_scraper"
+      
+  db:
+    image: postgres:13  # Imagen de PostgreSQL
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}  # Usar variable de entorno
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Usar variable de entorno
+      POSTGRES_DB: ${POSTGRES_DB}  # Usar variable de entorno
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/  # Guarda los datos persistentes
+    networks:
+      - scraping-network
+
+networks:
+  scraping-network:
+
+volumes:
+  postgres_data:
