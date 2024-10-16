@@ -35,7 +35,10 @@ RUN apt-get update && apt-get install -y \
 RUN wget -O /tmp/chrome-headless-shell-linux64.zip https://storage.googleapis.com/chrome-for-testing-public/129.0.6668.100/linux64/chrome-headless-shell-linux64.zip && \
     unzip /tmp/chrome-headless-shell-linux64.zip -d /usr/local/bin/ && \
     rm /tmp/chrome-headless-shell-linux64.zip
-
+# Descargar Google Chrome
+RUN wget -O /tmp/chrome-linux64.zip https://storage.googleapis.com/chrome-for-testing-public/130.0.6723.58/linux64/chrome-linux64.zip && \
+    unzip /tmp/chrome-linux64.zip -d /usr/local/bin/ && \
+    rm /tmp/chrome-linux64.zip
 # Descargar ChromeDriver
 RUN wget -O /tmp/chromedriver-linux64.zip https://storage.googleapis.com/chrome-for-testing-public/129.0.6668.100/linux64/chromedriver-linux64.zip && \
     unzip /tmp/chromedriver-linux64.zip -d /usr/local/bin/ && \
