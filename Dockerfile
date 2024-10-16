@@ -48,9 +48,6 @@ RUN wget -O /tmp/chromedriver-linux64.zip https://storage.googleapis.com/chrome-
 RUN chmod +x /usr/local/bin/chrome-headless-shell-linux64/chrome-headless-shell && \
     chmod +x /usr/local/bin/chromedriver-linux64/chromedriver
 
-# Crea el directorio /app
-# RUN mkdir /proyecto_web_scraping
-
 # Establece el directorio de trabajo
 WORKDIR /proyecto_web_scraping
 
@@ -61,6 +58,3 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Añade las rutas de los binarios de Chrome y Chromedriver al PATH
 ENV PATH="/usr/local/bin/chromedriver-linux64:/usr/local/bin/chrome-headless-shell-linux64:$PATH"
-
-# Comando por defecto para ejecutar tu script de scraping
-# CMD ["python", "scraper.py"]
